@@ -1,0 +1,842 @@
++<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fuel Express</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <!-- Hero Section -->
+   <section class="hero__section">
+        <header>
+            <nav class="navbar">
+                <a href="#" class="user_icon"><i class="fa-solid fa-user"></i></a>
+            </nav>
+        </header>
+        <div class="hero__section_container">
+            <img src="./Images/logo3.jpg" alt="Logo" class="hero__section_logo" />
+            <div id="dynamicText" style="font-size: 24px; font-weight: 700; color: #007b00; margin-top: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; white-space: nowrap; border-right: .15em solid orange; animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;">
+            </div>
+        </div>
+
+        <style>
+            @keyframes typing {
+                from { width: 0 }
+                to { width: 100% }
+            }
+            @keyframes blink-caret {
+                from, to { border-color: transparent }
+                50% { border-color: orange; }
+            }
+        </style>
+
+        <script>
+            const dynamicText = document.getElementById('dynamicText');
+            const text = "Fuel at your doorstep or wherever you want";
+            let index = 0;
+            const colors = ['#007b00', '#ff4500', '#1e90ff', '#ff1493', '#ffa500', '#32cd32'];
+            let colorIndex = 0;
+
+            function typeWriter() {
+                if (index < text.length) {
+                    dynamicText.textContent += text.charAt(index);
+                    dynamicText.style.color = colors[colorIndex];
+                    index++;
+                    colorIndex = (colorIndex + 1) % colors.length;
+                    setTimeout(typeWriter, 100);
+                } else {
+                    setTimeout(() => {
+                        dynamicText.textContent = '';
+                        index = 0;
+                        colorIndex = 0;
+                        typeWriter();
+                    }, 2000);
+                }
+            }
+            typeWriter();
+        </script>
+    </section>
+
+    <!-- Order Online Section -->
+    <div class="main-button">
+        <button id="showOrderBtn">For Order click here</button>
+    </div>
+
+    <div class="order-form" id="orderForm" style="display: none;">
+        <h2>Order Online from Fuel Station</h2>
+        <form id="orderFormElement">
+            <label for="fuel-station">Fuel Station:</label>
+            <select id="fuel-station" name="fuel-station" required style="margin: 0; padding: 0; height: auto;">
+                <option value="" disabled selected>Select Fuel Station</option>
+            </select>
+
+            <label for="fuel">Select fuel:</label>
+            <select id="fuel" name="fuel" onchange="updatePrice()" required>
+                <option value="">Select Fuel Type</option>
+                <option value="petrol" data-price="100">Petrol - ₹100</option>
+                <option value="diesel" data-price="95">Diesel - ₹95</option>
+                <option value="power petrol" data-price="150">Power Petrol - ₹150</option>
+            </select>
+            <!-- Removed Set Today's Fuel Prices button and price input form from here -->
+
+            <label for="quantity">Quantity:</label>
+            <input
+                type="number"
+                id="quantity"
+                name="quantity"
+                min="1"
+                value="1"
+                onchange="updatePrice()"
+                required
+                style="width: 100px; display: inline-block;"
+            />
+            <select id="quantityUnit" onchange="updatePrice()" style="display: inline-block; margin-left: 10px;">
+                <option value="liters" selected>Liters</option>
+                <option value="milliliters">Milliliters</option>
+            </select>
+
+            <label for="customer-name">Your Name:</label>
+            <input type="text" id="customer-name" name="customer_name" required />
+
+            <label for="customer-phone">Your Phone Number:</label>
+            <input type="tel" id="customer-phone" name="customer_phone" required />
+
+            <label for="customer-email">Your Email:</label>
+            <input type="email" id="customer-email" name="customer_email" required />
+
+            <label for="customer-address">Your Address:</label>
+            <textarea id="customer-address" name="customer_address" rows="4" required></textarea>
+
+            <label for="vehicle-number">Vehicle Number (optional):</label>
+            <input type="text" id="vehicle-number" name="vehicle_number" />
+
+            <label for="order-type">Payment Type:</label>
+            <select id="order-type" name="order_type" onchange="togglePaymentMethod()" required>
+                <option value="">Select Payment Type</option>
+                <option value="online">Online Payment (UPI)</option>
+                <option value="cash">Cash on delivery</option>
+            </select>
+
+            <div
+                id="qrPaymentDiv"
+                style="display: none; margin: 20px 0; text-align: center; border: 1px dashed #ccc; padding: 15px; border-radius: 8px;"
+            >
+                <h3>Scan to Pay via UPI</h3>
+                <div style="background: white; padding: 15px; display: inline-block; border-radius: 8px;">
+                    <img
+                        id="qrCodeImage"
+                        src=""
+                        alt="UPI QR Code"
+                        style="width: 200px; height: 200px"
+                    />
+                </div>
+                <p style="margin-top: 10px;">
+                    Or send payment to: <strong id="displayUpiId">9328028749@fam</strong>
+                </p>
+                <p>Amount: ₹<span id="displayAmount">0.00</span></p>
+                <div id="paymentVerification" style="margin-top: 15px;">
+                    <label for="paymentRef">UPI Transaction ID (last 4 digits):</label>
+                    <input
+                        type="text"
+                        id="paymentRef"
+                        placeholder="e.g. 7892"
+                        style="width: 100px; padding: 8px; text-align: center"
+                    />
+                </div>
+            </div>
+
+            <div class="total-price">
+                <p>Total Price: ₹<span id="totalPrice">0.00</span></p>
+            </div>
+
+            <button type="button" id="submitOrderBtn" onclick="processOrder()" style="background-color: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 30px; font-weight: 700; font-size: 18px; cursor: pointer; box-shadow: 0 6px 15px rgba(40, 167, 69, 0.5); transition: background 0.4s ease, transform 0.3s ease;">
+                Place Order
+            </button>
+        </form>
+    </div>
+
+    <!-- Popup Message -->
+    <div id="popup" class="popup" style="display: none;">
+        <div class="popup-content">
+            <p id="popup-message">Your order was confirmed. Sit back and relax!</p>
+            <button class="close" onclick="closePopup()">Close</button>
+        </div>
+    </div>
+
+    <!-- Collections Section -->
+    <section class="container_collections">
+        <h1>We Deliver</h1>
+        <div class="sub_heading__container">
+            <span>Explore fuel</span>
+        </div>
+        <div class="collections__cards_container">
+            <div class="cards card1">
+                <img src="images/petrol.jpg" alt="Petrol" style="width:100%; height: 100%; border-radius: 25px; object-fit: cover;" />
+                <div class="overlay"></div>
+                <div class="collections__content">
+                    <h4>Petrol</h4>
+                    <span>From near fuelstation</span>
+                </div>
+            </div>
+
+            <div class="cards card2">
+                <img src="images/diesel.jpeg" alt="Diesel" style="width:100%; height: 100%; border-radius: 25px; object-fit: cover;" />
+                <div class="overlay"></div>
+                <div class="collections__content">
+                    <h4>Diesel</h4>
+                    <span>Get at your doorstep</span>
+                </div>
+            </div>
+
+            <div class="cards card3">
+                <img src="images/power petrol.jpg" alt="Power Petrol" style="width:100%; height: 100%; border-radius: 25px; object-fit: cover;" />
+                <div class="overlay"></div>
+                <div class="collections__content">
+                    <h4>Power Petrol</h4>
+                    <span>Where ever you want</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Explore Places Section -->
+    <section class="explore_places__container">
+        <div class="sub_container">
+            <div>
+                <h1>Explore Options Near Me</h1>
+                <span>Explore the fuel station across various cities under our service</span>
+            </div>
+            <div class="drop_down__container">
+                <div>
+                    <select class="drop_down_menu">
+                        <option>Fuel station near</option>
+                        <option>Hindustan</option>
+                        <option>Bharat</option>
+                        <option>Indian</option>
+                        <option>Nayar</option>
+                    </select>
+                </div>
+                <div>
+                    <select class="drop_down_menu">
+                        <option>Cities We Deliver To</option>
+                        <option>Leh</option>
+                        <option>Ladakh</option>
+                        <option>Srinagar</option>
+                        <option>Shimla</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="image-gallery">
+        <h2 class="gallery-title">Our safety and support</h2>
+
+        <div class="image-card-container">
+            <div class="image-card">
+                <img src="images/download (2).jpg" alt="Fuel Delivery" />
+                <h3>Safety for Fuel Delivery</h3>
+                <p>Fast, safe fuel delivery right to your home or business.</p>
+            </div>
+
+            <div class="image-card">
+                <img src="images/delivery.jpeg" alt="Maintenance" />
+                <h3>Delivery Maintenance</h3>
+                <p>We ensure you can get fuel runs smoothly.</p>
+            </div>
+
+            <div class="image-card">
+                <img src="images/team.jpeg" alt="Support" />
+                <h3>24/7 Team Support</h3>
+                <p>Need help? Our team is always ready to assist you.</p>
+            </div>
+        </div>
+
+        <!-- Moved Set Today's Fuel Prices button and price input form here -->
+        <div style="margin-top: 20px;">
+            <button type="button" id="setPricesBtn" style="padding: 10px 20px; background-color: #007b00; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Set Today's Fuel Prices</button>
+            <button type="button" id="showAddFuelStationFormBtn" style="margin-left: 10px; padding: 10px 20px; background-color: #005500; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Add Fuel Station</button>
+            <button type="button" id="showRemoveFuelStationFormBtn" style="margin-left: 10px; padding: 10px 20px; background-color: #990000; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Remove Fuel Station</button>
+
+            <div id="addFuelStationForm" style="display:none; margin-top: 15px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; background-color: #f9f9f9; max-width: 400px;">
+                <h3>Add New Fuel Station</h3>
+                <input type="text" id="newFuelStation" placeholder="Enter fuel station name" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;" />
+                <button type="button" id="addFuelStationBtn" style="margin-top: 5px; padding: 10px 20px; background-color: #005500; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Add Fuel Station</button>
+            </div>
+
+            <div id="removeFuelStationForm" style="display:none; margin-top: 15px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; background-color: #f9f9f9; max-width: 400px;">
+                <h3>Remove Fuel Station</h3>
+                <select id="removeFuelStationSelect" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 5px;">
+                    <!-- Options will be populated dynamically -->
+                </select>
+                <button type="button" id="removeFuelStationBtn" style="padding: 10px 20px; background-color: #990000; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Remove Fuel Station</button>
+            </div>
+
+            <div id="priceInputForm" style="display:none; margin-top: 15px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; background-color: #f9f9f9; max-width: 400px;">
+                <h3>Set Fuel Prices for Today</h3>
+                <label for="pricePetrol">Petrol Price (₹):</label>
+                <input type="number" id="pricePetrol" min="0" step="0.01" value="100" style="margin-bottom: 10px; width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;" />
+                <label for="priceDiesel">Diesel Price (₹):</label>
+                <input type="number" id="priceDiesel" min="0" step="0.01" value="95" style="margin-bottom: 10px; width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;" />
+                <label for="pricePowerPetrol">Power Petrol Price (₹):</label>
+                <input type="number" id="pricePowerPetrol" min="0" step="0.01" value="150" style="margin-bottom: 10px; width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;" />
+                <button type="button" id="savePricesBtn" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;">Save Prices</button>
+                <button type="button" id="cancelPricesBtn" style="padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; margin-left: 10px;">Cancel</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chatbot Section -->
+    <div id="chatbot">
+        <div id="chatbot-header" onclick="toggleChatbot()">
+            <span>FuelExpress Chatbot</span>
+            <span id="chatbot-toggle">−</span>
+        </div>
+        <div id="chatbot-body">
+            <div id="chatbot-messages"></div>
+            <input type="text" id="chatbot-input" placeholder="Ask me about fuel delivery..." onkeydown="if(event.key === 'Enter'){sendMessage();}" />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="footer__container">
+        <div class="footer_section1">
+            <img src="./Images/logo3.jpg" alt="logo" />
+            <div class="section1__button_container">
+                
+        <div class="navigation_container">
+            <div class="link_container">
+                <h5>About FuelExpress</h5>
+                <div class="link_container_anchors">
+                    <p>
+                        FuelExpress is your trusted on-demand fuel delivery partner, committed to providing safe,
+                        fast, and convenient refueling services at your location. Whether it's for individuals or commercial fleets,
+                        we deliver high-quality fuel directly to your doorstep—anytime, anywhere.
+                        Save time, avoid the pump, and keep moving with FuelExpress!
+                    </p>
+                </div>
+            </div>
+
+            <div class="link_container">
+                <h5>Contact Information</h5>
+                <div class="link_container_anchors">
+                    <p>📍 Address: Block No. 402, Ankleshwar-Valia Road, Valia, Dist: Bharuch, Gujarat, India</p>
+                    <p>📞 Phone: +91 9328028749</p>
+                    <p>✉️ Email: fuelexpress@gmail.com</p>
+                    <p>
+                        🌐 Website:
+                        <a href="file:///C:/Users/HP/Desktop/projectfuel/fuel.html">www.fuelexpress.com</a>
+                    </p>
+                    <p>
+                        Follow us on:
+                        <a href="#">Facebook</a> |
+                        <a href="#">Instagram</a> |
+                        <a href="#">Twitter</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>
+                By continuing past this page, you agree to our Terms of Service, Cookie Policy, Privacy Policy,
+                and Content Policies. All trademarks are properties of their respective owners. 20024–2025 ©
+                FuelExpress™ Ltd. All rights reserved.
+            </p>
+        </footer>
+    </footer>
+
+    <script>
+        // JavaScript to handle showing the Order form and calculating the total
+        const showOrderBtn = document.getElementById('showOrderBtn');
+        const orderForm = document.getElementById('orderForm');
+        const totalPriceElem = document.getElementById('totalPrice');
+        const fuelSelect = document.getElementById('fuel');
+        const quantityInput = document.getElementById('quantity');
+        const popup = document.getElementById('popup');
+        const popupMessage = document.getElementById('popup-message');
+        const qrPaymentDiv = document.getElementById('qrPaymentDiv');
+        const qrCodeImage = document.getElementById('qrCodeImage');
+        const displayAmount = document.getElementById('displayAmount');
+        const displayUpiId = document.getElementById('displayUpiId');
+        const paymentVerification = document.getElementById('paymentVerification');
+        const paymentRef = document.getElementById('paymentRef');
+        const submitOrderBtn = document.getElementById('submitOrderBtn');
+        const setPricesBtn = document.getElementById('setPricesBtn');
+        const priceInputForm = document.getElementById('priceInputForm');
+        const savePricesBtn = document.getElementById('savePricesBtn');
+        const cancelPricesBtn = document.getElementById('cancelPricesBtn');
+        const pricePetrolInput = document.getElementById('pricePetrol');
+        const priceDieselInput = document.getElementById('priceDiesel');
+        const pricePowerPetrolInput = document.getElementById('pricePowerPetrol');
+
+        // Show Order form when "Order Online" button is clicked
+        showOrderBtn.addEventListener('click', function () {
+            orderForm.style.display = 'block';
+        });
+
+        const addFuelStationBtn = document.getElementById('addFuelStationBtn');
+        const removeFuelStationBtn = document.getElementById('removeFuelStationBtn');
+        const fuelStationSelect = document.getElementById('fuel-station');
+        const removeFuelStationSelect = document.getElementById('removeFuelStationSelect');
+        const newFuelStationInput = document.getElementById('newFuelStation');
+        const showAddFuelStationFormBtn = document.getElementById('showAddFuelStationFormBtn');
+        const showRemoveFuelStationFormBtn = document.getElementById('showRemoveFuelStationFormBtn');
+        const addFuelStationForm = document.getElementById('addFuelStationForm');
+        const removeFuelStationForm = document.getElementById('removeFuelStationForm');
+        const adminPassword = 'admin123'; // Hardcoded admin password
+
+        // Load fuel stations from localStorage or use default list
+        function loadFuelStations() {
+            const savedStations = localStorage.getItem('fuelStations');
+            let stations = [];
+            if (savedStations) {
+                stations = JSON.parse(savedStations);
+            } else {
+                stations = [
+                    { value: 'hp', text: 'HP' },
+                    { value: 'shell', text: 'Shell' },
+                    { value: 'dbt', text: 'DBT' },
+                    { value: 'hindustan petroleum', text: 'Hindustan Petroleum' },
+                    { value: 'bharat petroleum', text: 'Bharat Petroleum' },
+                    { value: 'indian oil', text: 'Indian Oil' },
+                    { value: 'nayara petroleum', text: 'Nayara Petroleum' }
+                ];
+            }
+            // Clear existing options except the first placeholder in fuelStationSelect
+            while (fuelStationSelect.options.length > 1) {
+                fuelStationSelect.remove(1);
+            }
+            // Clear existing options in removeFuelStationSelect
+            while (removeFuelStationSelect.options.length > 0) {
+                removeFuelStationSelect.remove(0);
+            }
+            // Add stations to both selects, filtering out empty or invalid entries
+            stations.forEach(station => {
+                if (station.value && station.value.trim() !== '' && station.text && station.text.trim() !== '') {
+                    const option1 = document.createElement('option');
+                    option1.value = station.value;
+                    option1.textContent = station.text;
+                    fuelStationSelect.appendChild(option1);
+
+                    const option2 = document.createElement('option');
+                    option2.value = station.value;
+                    option2.textContent = station.text;
+                    removeFuelStationSelect.appendChild(option2);
+                }
+            });
+        }
+
+        // Save fuel stations to localStorage
+        function saveFuelStations() {
+            const stations = [];
+            for (let i = 1; i < fuelStationSelect.options.length; i++) {
+                const option = fuelStationSelect.options[i];
+                stations.push({ value: option.value, text: option.textContent });
+            }
+            localStorage.setItem('fuelStations', JSON.stringify(stations));
+        }
+
+        // Prompt for admin password and return true if correct
+        function checkAdminPassword() {
+            const enteredPassword = prompt('Enter admin password:');
+            if (enteredPassword === adminPassword) {
+                return true;
+            } else {
+                alert('Access denied: Incorrect password.');
+                return false;
+            }
+        }
+
+        // Add fuel station button click handler
+        addFuelStationBtn.addEventListener('click', () => {
+            if (!checkAdminPassword()) return;
+            const newStation = newFuelStationInput.value.trim();
+            if (newStation === '') {
+                alert('Please enter a fuel station name.');
+                return;
+            }
+            const value = newStation.toLowerCase().replace(/\s+/g, '-');
+            // Check if station already exists
+            for (let i = 1; i < fuelStationSelect.options.length; i++) {
+                if (fuelStationSelect.options[i].value === value) {
+                    alert('Fuel station already exists.');
+                    return;
+                }
+            }
+            const option1 = document.createElement('option');
+            option1.value = value;
+            option1.textContent = newStation;
+            fuelStationSelect.appendChild(option1);
+
+            const option2 = document.createElement('option');
+            option2.value = value;
+            option2.textContent = newStation;
+            removeFuelStationSelect.appendChild(option2);
+
+            saveFuelStations();
+            alert('Fuel station added successfully.');
+            newFuelStationInput.value = '';
+            addFuelStationForm.style.display = 'none';
+        });
+
+        // Remove fuel station button click handler
+        removeFuelStationBtn.addEventListener('click', () => {
+            if (!checkAdminPassword()) return;
+            const selectedIndex = removeFuelStationSelect.selectedIndex;
+            if (selectedIndex < 0) {
+                alert('Please select a fuel station to remove.');
+                return;
+            }
+            const confirmRemove = confirm(`Are you sure you want to remove "${removeFuelStationSelect.options[selectedIndex].text}"?`);
+            if (confirmRemove) {
+                const valueToRemove = removeFuelStationSelect.options[selectedIndex].value;
+                // Remove from fuelStationSelect
+                for (let i = 1; i < fuelStationSelect.options.length; i++) {
+                    if (fuelStationSelect.options[i].value === valueToRemove) {
+                        fuelStationSelect.remove(i);
+                        break;
+                    }
+                }
+                // Remove from removeFuelStationSelect
+                removeFuelStationSelect.remove(selectedIndex);
+
+                saveFuelStations();
+                alert('Fuel station removed successfully.');
+                removeFuelStationForm.style.display = 'none';
+            }
+        });
+
+        // Load fuel stations and saved prices on page load
+        window.addEventListener('DOMContentLoaded', (event) => {
+            loadFuelStations();
+
+            // Hide add/remove forms initially
+            addFuelStationForm.style.display = 'none';
+            removeFuelStationForm.style.display = 'none';
+
+            // Show add fuel station form button click
+            showAddFuelStationFormBtn.addEventListener('click', () => {
+                addFuelStationForm.style.display = 'block';
+                removeFuelStationForm.style.display = 'none';
+            });
+
+            // Show remove fuel station form button click
+            showRemoveFuelStationFormBtn.addEventListener('click', () => {
+                removeFuelStationForm.style.display = 'block';
+                addFuelStationForm.style.display = 'none';
+            });
+
+            // Load saved prices
+            const savedPetrolPrice = localStorage.getItem('pricePetrol');
+            const savedDieselPrice = localStorage.getItem('priceDiesel');
+            const savedPowerPetrolPrice = localStorage.getItem('pricePowerPetrol');
+
+            if (savedPetrolPrice !== null) {
+                pricePetrolInput.value = savedPetrolPrice;
+                updateFuelOption('petrol', parseFloat(savedPetrolPrice));
+            }
+            if (savedDieselPrice !== null) {
+                priceDieselInput.value = savedDieselPrice;
+                updateFuelOption('diesel', parseFloat(savedDieselPrice));
+            }
+            if (savedPowerPetrolPrice !== null) {
+                pricePowerPetrolInput.value = savedPowerPetrolPrice;
+                updateFuelOption('power petrol', parseFloat(savedPowerPetrolPrice));
+            }
+
+            // Update price display if a fuel is selected
+            updatePrice();
+        });
+
+        // Chatbot functionality
+        const chatbot = document.getElementById('chatbot');
+        const chatbotHeader = document.getElementById('chatbot-header');
+        const chatbotBody = document.getElementById('chatbot-body');
+        const chatbotMessages = document.getElementById('chatbot-messages');
+        const chatbotInput = document.getElementById('chatbot-input');
+
+        function toggleChatbot() {
+            if (chatbotBody.style.display === 'none' || chatbotBody.style.display === '') {
+                chatbotBody.style.display = 'block';
+                document.getElementById('chatbot-toggle').textContent = '−';
+            } else {
+                chatbotBody.style.display = 'none';
+                document.getElementById('chatbot-toggle').textContent = '+';
+            }
+        }
+
+        function sendMessage() {
+            const userMessage = chatbotInput.value.trim();
+            if (userMessage === '') return;
+
+            appendMessage('You', userMessage);
+            chatbotInput.value = '';
+            setTimeout(() => {
+                const botResponse = getBotResponse(userMessage);
+                appendMessage('FuelExpress', botResponse);
+            }, 500);
+        }
+
+        function appendMessage(sender, message) {
+            const messageElem = document.createElement('div');
+            messageElem.classList.add('chat-message');
+            messageElem.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            chatbotMessages.appendChild(messageElem);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+
+        function getBotResponse(message) {
+            const msg = message.toLowerCase();
+            if (msg.includes('price')) {
+                return 'Our current fuel prices are Petrol: ₹100/liter, Diesel: ₹95/liter, Power Petrol: ₹150/liter.';
+            } else if (msg.includes('delivery')) {
+                return 'We offer fast and safe fuel delivery to your doorstep. You can order online using the form.';
+            } else if (msg.includes('payment')) {
+                return 'We accept online payments via UPI and cash on delivery.';
+            } else if (msg.includes('minimum') || msg.includes('quantity')) {
+                return 'The minimum purchase quantity is 200 milliliters.';
+            } else if (msg.includes('contact')) {
+                return 'You can contact us at +91 9328028749 or email us at fuelexpress@gmail.com.';
+            } else {
+                return 'Sorry, I did not understand that. Please ask about fuel prices, delivery, payment, or contact information.';
+            }
+        }
+
+        // Show price input form when "Set Today's Fuel Prices" button clicked with admin password prompt
+        setPricesBtn.addEventListener('click', function () {
+            const adminPassword = 'admin123'; // Hardcoded admin password
+            const enteredPassword = prompt('Enter admin password to change fuel prices:');
+            if (enteredPassword === adminPassword) {
+                priceInputForm.style.display = 'block';
+                setPricesBtn.style.display = 'none';
+            } else {
+                alert('Access denied: Incorrect password.');
+            }
+        });
+
+        // Cancel price input form
+        cancelPricesBtn.addEventListener('click', function () {
+            priceInputForm.style.display = 'none';
+            setPricesBtn.style.display = 'inline-block';
+        });
+
+        // Save prices and update fuel select options
+        savePricesBtn.addEventListener('click', function () {
+            const petrolPrice = parseFloat(pricePetrolInput.value);
+            const dieselPrice = parseFloat(priceDieselInput.value);
+            const powerPetrolPrice = parseFloat(pricePowerPetrolInput.value);
+
+            if (isNaN(petrolPrice) || petrolPrice < 0 ||
+                isNaN(dieselPrice) || dieselPrice < 0 ||
+                isNaN(powerPetrolPrice) || powerPetrolPrice < 0) {
+                alert('Please enter valid non-negative prices for all fuel types.');
+                return;
+            }
+
+            // Save prices to localStorage
+            localStorage.setItem('pricePetrol', petrolPrice.toFixed(2));
+            localStorage.setItem('priceDiesel', dieselPrice.toFixed(2));
+            localStorage.setItem('pricePowerPetrol', powerPetrolPrice.toFixed(2));
+
+            // Update fuel select options data-price and text
+            updateFuelOption('petrol', petrolPrice);
+            updateFuelOption('diesel', dieselPrice);
+            updateFuelOption('power petrol', powerPetrolPrice);
+
+            priceInputForm.style.display = 'none';
+            setPricesBtn.style.display = 'inline-block';
+
+            // If a fuel is selected, update the price display
+            updatePrice();
+        });
+
+        // Helper function to update fuel option price and text
+        function updateFuelOption(fuelValue, price) {
+            const option = Array.from(fuelSelect.options).find(opt => opt.value === fuelValue);
+            if (option) {
+                option.setAttribute('data-price', price.toFixed(2));
+                option.textContent = `${capitalizeWords(fuelValue)} - ₹${price.toFixed(2)}`;
+            }
+        }
+
+        // Helper function to capitalize words
+        function capitalizeWords(str) {
+            return str.replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        // Function to update price and total based on fuel selection and quantity
+        function updatePrice() {
+            const selectedFuel = fuelSelect.options[fuelSelect.selectedIndex];
+            if (selectedFuel.value === '') {
+                totalPriceElem.textContent = '0.00';
+                return;
+            }
+            const fuelPrice = parseFloat(selectedFuel.getAttribute('data-price'));
+            let quantity = parseFloat(quantityInput.value);
+            const unit = document.getElementById('quantityUnit').value;
+            if (unit === 'milliliters') {
+                quantity = quantity / 1000; // convert ml to liters
+            }
+            const totalPrice = fuelPrice * quantity;
+            totalPriceElem.textContent = totalPrice.toFixed(2);
+
+            // Update QR code amount if payment method is online
+            if (document.getElementById('order-type').value === 'online') {
+                displayAmount.textContent = totalPrice.toFixed(2);
+                updateQRCode(totalPrice.toFixed(2));
+            }
+        }
+
+        // Function to toggle payment method
+        function togglePaymentMethod() {
+            const paymentType = document.getElementById('order-type').value;
+            const amount = totalPriceElem.textContent;
+
+            if (paymentType === 'online') {
+                displayAmount.textContent = amount;
+                displayUpiId.textContent = '9328028749@fam'; // Replace with your UPI ID
+                updateQRCode(amount);
+                qrPaymentDiv.style.display = 'block';
+                paymentVerification.style.display = 'block';
+            } else {
+                qrPaymentDiv.style.display = 'none';
+                paymentVerification.style.display = 'none';
+            }
+        }
+
+        // Function to update QR code
+        function updateQRCode(amount) {
+            // Replace with your actual UPI ID and business name
+            const upiId = '9328028749@fam';
+            const businessName = 'Fuel Station';
+
+            qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${upiId}&pn=${encodeURIComponent(
+                businessName
+            )}&am=${amount}&cu=INR`;
+        }
+
+        // Function to clear all form fields
+        function clearForm() {
+            document.getElementById('orderFormElement').reset();
+            totalPriceElem.textContent = '0.00';
+            qrPaymentDiv.style.display = 'none';
+            paymentVerification.style.display = 'none';
+        }
+
+            // Function to process order
+            function processOrder() {
+                const formElement = document.getElementById('orderFormElement');
+                if (!formElement.checkValidity()) {
+                    formElement.reportValidity();
+                    return;
+                }
+
+                // Validate fuel station selection
+                const fuelStationValue = document.getElementById('fuel-station').value;
+                if (!fuelStationValue) {
+                    alert('Please select a fuel station.');
+                    return;
+                }
+
+                // Validate minimum quantity for milliliters
+                const quantityValue = parseFloat(quantityInput.value);
+                const quantityUnit = document.getElementById('quantityUnit').value;
+                if (quantityUnit === 'milliliters' && quantityValue < 200) {
+                    alert('Minimum purchase quantity for milliliters is 200 ml.');
+                    return;
+                }
+
+                const paymentType = document.getElementById('order-type').value;
+
+                if (paymentType === 'online' && !paymentRef.value) {
+                    alert('Please enter your UPI transaction reference');
+                    return;
+                }
+
+                // Get form data
+                const formData = {
+                    fuelStation: document.getElementById('fuel-station').value,
+                    fuelType: document.getElementById('fuel').value,
+                    quantity: document.getElementById('quantity').value,
+                    pricePerLiter: fuelSelect.options[fuelSelect.selectedIndex].getAttribute('data-price'),
+                    totalPrice: totalPriceElem.textContent,
+                    paymentType: paymentType,
+                    paymentStatus: paymentType === 'online' ? 'Pending Verification' : 'Cash Payment',
+                    paymentReference: paymentRef.value || 'N/A',
+                    customerName: document.getElementById('customer-name').value,
+                    customerPhone: document.getElementById('customer-phone').value,
+                    customerEmail: document.getElementById('customer-email').value,
+                    customerAddress: document.getElementById('customer-address').value,
+                    vehicleNumber: document.getElementById('vehicle-number').value,
+                    timestamp: new Date().toLocaleString(),
+                };
+
+
+                // Disable button during processing
+                submitOrderBtn.disabled = true;
+                submitOrderBtn.textContent = 'Processing...';
+
+                // Send data to Google Sheets
+                fetch('https://script.google.com/macros/s/AKfycbxVVU49dwxMJcysIBm3Pw1PYhKyD48p-ZVC9jFHtPGdNlKMasArA9hEjf4HIrOOyvAu9A/exec', {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                })
+                    .then(() => {
+                        popupMessage.textContent =
+                            paymentType === 'online'
+                                ? "Order received! We'll verify your payment shortly."
+                                : 'Order confirmed! Pay when delivered.';
+                        popup.style.display = 'flex';
+                        clearForm(); // Clear all form fields
+                    })
+                    .catch((error) => {
+                        popupMessage.textContent = 'There was an error processing your order. Please try again.';
+                        popup.style.display = 'flex';
+                        console.error('Error:', error);
+                    })
+                    .finally(() => {
+                        submitOrderBtn.disabled = false;
+                        submitOrderBtn.textContent = 'Place Order';
+                    });
+            }
+
+        // Function to close the popup
+        function closePopup() {
+            popup.style.display = 'none';
+            orderForm.style.display = 'none';
+        }
+        // Load saved prices from localStorage on page load
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const savedPetrolPrice = localStorage.getItem('pricePetrol');
+            const savedDieselPrice = localStorage.getItem('priceDiesel');
+            const savedPowerPetrolPrice = localStorage.getItem('pricePowerPetrol');
+
+            if (savedPetrolPrice !== null) {
+                pricePetrolInput.value = savedPetrolPrice;
+                updateFuelOption('petrol', parseFloat(savedPetrolPrice));
+            }
+            if (savedDieselPrice !== null) {
+                priceDieselInput.value = savedDieselPrice;
+                updateFuelOption('diesel', parseFloat(savedDieselPrice));
+            }
+            if (savedPowerPetrolPrice !== null) {
+                pricePowerPetrolInput.value = savedPowerPetrolPrice;
+                updateFuelOption('power petrol', parseFloat(savedPowerPetrolPrice));
+            }
+
+            // Update price display if a fuel is selected
+            updatePrice();
+        });
+    </script>
+</body>
+</html>
+\end{code}
